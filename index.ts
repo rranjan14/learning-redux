@@ -1,24 +1,36 @@
 interface IGlobalStore {
-
-  registerReducer(reducer: (state: any, actionName: string, payload: any) => void): void;
+  registerReducer(
+    reducer: (state: any, actionName: string, payload: any) => void
+  ): void;
 
   dispatch(actionName: string, payload: any): void;
 
-  subscribe<T>(selector: (state: T) => T, subscribeFn: (newData: T, oldData: T) => void): () => void;
+  subscribe<T>(
+    selector: (state: T) => T,
+    subscribeFn: (newData: T, oldData: T) => void
+  ): () => void;
 
-  addMiddleware(...middlewares: ((store: any) => (next: (actionName: any, payload: any) => void) => (actionName: any, payload: any) => void)[]): void;
-
+  addMiddleware(
+    ...middlewares: ((
+      store: any
+    ) => (actionName: any, payload: any, next: () => void) => void)[]
+  ): void;
 }
-
 
 // ---------------- Your Code -----------------------
 
-
 export default class GlobalStore implements IGlobalStore {
   state: any;
-  middlewareChain: ((actionName: string, payload: any, nextMiddleware: () => void) => void)[];
+  middlewareChain: ((
+    actionName: string,
+    payload: any,
+    nextMiddleware: () => void
+  ) => void)[];
   reducerFunction: (state: any, actionName: string, payload: any) => void;
-  subscriberArray: { selector: (store: any) => string, callback: (newData: string, oldData: string) => void }[];
+  subscriberArray: {
+    selector: (store: any) => string;
+    callback: (newData: string, oldData: string) => void;
+  }[];
 
   constructor(initialState: any) {
     this.state = initialState;
@@ -28,7 +40,9 @@ export default class GlobalStore implements IGlobalStore {
     this.dispatch = this.dispatch.bind(this);
   }
 
-  registerReducer(reducer: (state: any, actionName: string, payload: any) => void): void {
+  registerReducer(
+    reducer: (state: any, actionName: string, payload: any) => void
+  ): void {
     this.reducerFunction = reducer;
   }
 
@@ -48,7 +62,7 @@ export default class GlobalStore implements IGlobalStore {
       next(0); // Start calling the middleware chain
     };
 
-    if (typeof payload === 'function') {
+    if (typeof payload === "function") {
       payload().then((resolvedValue: any) => {
         handlePayload(resolvedValue);
       });
@@ -69,7 +83,10 @@ export default class GlobalStore implements IGlobalStore {
     });
   }
 
-  subscribe(selector: (store: any) => any, subscribeFn: (newData: any, oldData: any) => void): () => void {
+  subscribe(
+    selector: (store: any) => any,
+    subscribeFn: (newData: any, oldData: any) => void
+  ): () => void {
     const subscription = { selector: selector, callback: subscribeFn };
     this.subscriberArray.push(subscription);
 
@@ -81,27 +98,35 @@ export default class GlobalStore implements IGlobalStore {
     };
   }
 
-  addMiddleware(...middlewares: ((store: any) => (next: (actionName: string, payload: any) => void) => (actionName: string, payload: any) => void)[]): void {
+  addMiddleware(
+    ...middlewares: ((
+      store: any
+    ) => (
+      actionName: string,
+      payload: any,
+      next: (actionName: string, payload: any) => void
+    ) => void)[]
+  ): void {
     middlewares.forEach((middleware) => {
-      this.middlewareChain.push(middleware(this)(this.dispatch));
+      this.middlewareChain.push(middleware(this));
     });
   }
 }
 
 const store = new GlobalStore({
   name: "",
-  email: ""
+  email: "",
 });
 
 store.registerReducer((state, action, payload) => {
   switch (action) {
     case "changeName":
-      state.name = payload
-      break
+      state.name = payload;
+      break;
     case "changeEmail":
-      state.email = payload
-      break
+      state.email = payload;
+      break;
     default:
-      break
+      break;
   }
 });
