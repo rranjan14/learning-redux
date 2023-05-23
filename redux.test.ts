@@ -36,7 +36,7 @@ describe("GlobalStore", () => {
     expect(store.state.email).toBe("test@test.com");
   });
 
-  it("should handle a function payload that resolves to a value and update the state when resolved", (done) => {
+  it("should handle a function payload that resolves to a value and update the state when resolved", async () => {
     const payloadFn = () =>
       new Promise((resolve) => {
         setTimeout(() => resolve("Replit"), 100);
@@ -47,10 +47,8 @@ describe("GlobalStore", () => {
     // Verify that the state is not updated immediately
     expect(store.state.name).toBe("");
 
-    setTimeout(() => {
-      expect(store.state.name).toBe("Replit");
-      done();
-    }, 200); // why?? waiting for promise to resolve
+    const val = await payloadFn();
+    expect(store.state.name).toBe(val);
   });
 
   it("should register all middlewares", () => {
